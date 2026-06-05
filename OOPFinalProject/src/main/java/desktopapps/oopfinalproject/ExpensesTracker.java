@@ -3,13 +3,11 @@ package desktopapps.oopfinalproject;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
 import javafx.scene.SnapshotParameters;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -26,8 +24,7 @@ import javafx.stage.Stage;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.List;
-import javafx.scene.control.Alert;
+
 import javafx.scene.control.Alert.AlertType;
 
 public class ExpensesTracker extends Application {
@@ -97,14 +94,14 @@ public class ExpensesTracker extends Application {
     TextField newCategoryField = new TextField();
     Button addCategoryButton = new Button("Add Category");
     ComboBox<String> categoryComboBox = new ComboBox<>();
-    private static final Map<String, Color> categoryColors = Map.of(
+    private final Map<String, Color> categoryColors = new HashMap<>(Map.of(
             "Food", Color.web("#e74c3c"),
             "Transport", Color.web("#3498db"),
             "Entertainment", Color.web("#9b59b6"),
             "Utilities", Color.web("#f1c40f"),
             "Other", Color.web("#2ecc71"),
             "Remaining", Color.web("#95a5a6")
-    );
+    ));
 
     public static void main(String[] args) {
         launch(args);
@@ -366,6 +363,10 @@ public class ExpensesTracker extends Application {
     private void addExpense(String username) {
         try {
             String desc = descField.getText();
+            if (desc.isEmpty()) {
+                showWarning("Description cannot be empty.");
+                return;
+            }
             double amount = Double.parseDouble(amountField.getText());
             LocalDate date = datePicker.getValue();
             String category = categoryBox.getValue();
@@ -408,6 +409,10 @@ public class ExpensesTracker extends Application {
         if (selected != null) {
             try {
                 String desc = descField.getText();
+                if (desc.isEmpty()) {
+                    showWarning("Description cannot be empty.");
+                    return;
+                }
                 double amount = Double.parseDouble(amountField.getText());
                 LocalDate date = datePicker.getValue();
                 String category = categoryBox.getValue();
@@ -416,10 +421,8 @@ public class ExpensesTracker extends Application {
                         .filter(e -> e != selected)
                         .mapToDouble(Expense::getAmount)
                         .sum();
-                 if (monthlyIncome != null && (currentTotal + amount) > monthlyIncome) {
-                     alert.setTitle("Warning!");
-                     alert.setHeaderText("An error has occured!");
-                     alert.setContentText("Modified amount exceeds monthly income!");
+                 if (monthlyIncome != null && monthlyIncome > 0 && (currentTotal + amount) > monthlyIncome) {
+                        showWarning("Modified amount exceeds monthly income!");
                         return;
                  }
 
@@ -472,14 +475,21 @@ public class ExpensesTracker extends Application {
         for (Map.Entry<String, Double> entry : categoryTotals.entrySet()) {
             String category = entry.getKey();
             double value = entry.getValue();
+            Color color = categoryColors.getOrDefault(category, Color.GRAY);
 
             PieChart.Data slice = new PieChart.Data(category, value);
             pieChart.getData().add(slice);
 
+            Platform.runLater(() -> {
+                Node pieNode = slice.getNode();
+                if (pieNode != null) {
+                    pieNode.setStyle("-fx-pie-color: " + toRgbString(color) + ";");
+                }
+            });
+
             XYChart.Data<String, Number> barData = new XYChart.Data<>(category, value);
             series.getData().add(barData);
 
-            Color color = categoryColors.getOrDefault(category, Color.GRAY);
             Node pieNode = slice.getNode();
             if (pieNode != null) {
                 pieNode.setStyle("-fx-pie-color: " + toRgbString(color) + ";");
@@ -604,6 +614,13 @@ public class ExpensesTracker extends Application {
                 ((Text) node).setFill(Color.web(color));
             }
         }
+    }
+
+    private void showWarning(String message) {
+        Alert alert = new Alert(AlertType.WARNING);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
     private void addNewCategory() {
         String newCategory = newCategoryField.getText().trim();
