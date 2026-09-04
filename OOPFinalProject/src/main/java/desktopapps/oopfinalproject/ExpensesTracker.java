@@ -109,6 +109,7 @@ public class ExpensesTracker extends Application {
 
     @Override
     public void start(Stage stage) {
+        Database.initialize();
         showLoginScreen(stage);
     }
 
@@ -141,7 +142,7 @@ public class ExpensesTracker extends Application {
         loginButton.setOnAction(e -> {
             String user = userField.getText();
             String pass = passField.getText();
-            if (userDatabase.containsKey(user) && userDatabase.get(user).equals(pass)) {
+            if (Database.validateLogin(user, pass)) {
                 currentUser = user;
                 if (!userExpenses.containsKey(user)) {
                     userExpenses.put(user, new ArrayList<>());
@@ -199,11 +200,10 @@ public class ExpensesTracker extends Application {
             String pass = passField.getText();
             if (user.isEmpty() || pass.isEmpty()) {
                 signupMessage.setText("Please fill in all fields.");
-            } else if (userDatabase.containsKey(user)) {
+            } else if (Database.userExists(user)) {
                 signupMessage.setText("Username already exists.");
             } else {
-                userDatabase.put(user, pass);
-                userExpenses.put(user, new ArrayList<>());
+                Database.registerUser(user, pass);
                 showLoginScreen(stage);
             }
         });

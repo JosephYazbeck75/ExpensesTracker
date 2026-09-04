@@ -1,5 +1,13 @@
 {
 
     "version": "0.2.0",
-    "configurations": []
+    "configurations": [
+        {
+            "type": "java",
+            "name": "ExpensesTracker",
+            "request": "launch",
+            "mainClass": "desktopapps.oopfinalproject/desktopapps.oopfinalproject.ExpensesTracker",
+            "projectName": "OOPFinalProject"
+        }
+    ]
 }
