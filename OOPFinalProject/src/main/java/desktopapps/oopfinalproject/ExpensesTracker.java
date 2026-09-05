@@ -13,6 +13,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.chart.*;
+import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
@@ -29,6 +30,7 @@ import javafx.scene.control.Alert.AlertType;
 
 public class ExpensesTracker extends Application {
     public static class Expense {
+        private int id;
         private String description;
         private double amount;
         private LocalDate date;
@@ -39,6 +41,12 @@ public class ExpensesTracker extends Application {
             this.amount = amount;
             this.date = date;
             this.category = category;
+        }
+        public int getId() {
+        return id;
+        }
+        public void setId(int id) {
+        this.id = id;
         }
 
         public String getDescription() {
@@ -215,6 +223,7 @@ public class ExpensesTracker extends Application {
     }
 
     private void showExpensesScreen(Stage stage, String username) {
+        monthlyIncome = Database.getMonthlyIncome(username);
         tableView = new TableView<>();
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label welcomeLabel = new Label("Welcome, " + username + "!");
@@ -249,6 +258,7 @@ public class ExpensesTracker extends Application {
                 } catch (NumberFormatException e) {
                     monthlyIncome = 0.0;
                 }
+                Database.setMonthlyIncome(username, monthlyIncome);
             });
         }
 
@@ -380,8 +390,7 @@ public class ExpensesTracker extends Application {
                 return;
             }
 
-            Expense expense = new Expense(desc, amount, date, category);
-            userExpenses.get(username).add(expense);
+           Database.addExpense(username, desc, amount, date.toString(), category);
             refreshTable(username);
             updateCharts();
             descField.clear();
@@ -398,7 +407,7 @@ public class ExpensesTracker extends Application {
     private void deleteSelectedExpense(String username) {
         Expense selected = tableView.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            userExpenses.get(username).remove(selected);
+            Database.deleteExpense(selected.getId());
             refreshTable(username);
             updateCharts();
         }
@@ -431,6 +440,7 @@ public class ExpensesTracker extends Application {
                     selected.setDate(date);
                     selected.setCategory(category);
 
+                    Database.updateExpense(selected);
                     refreshTable(username);
                     updateCharts();
                     messageLabel.setText("");
@@ -444,16 +454,17 @@ public class ExpensesTracker extends Application {
         }
 
     private void refreshTable(String username) {
-        tableView.getItems().setAll(userExpenses.get(username));
+        List<Expense> expenses = Database.getExpenses(username);
+        tableView.getItems().setAll(expenses);
 
-        totalExpenses = userExpenses.get(username).stream()
-                .mapToDouble(Expense::getAmount)
-                .sum();
+        totalExpenses = expenses.stream()
+            .mapToDouble(Expense::getAmount)
+            .sum();
 
         double remainingBudget = (monthlyIncome != null) ? Math.max(0, monthlyIncome - totalExpenses) : 0;
 
         totalLabel.setText("Monthly Budget: $" + String.format("%.2f", monthlyIncome != null ? monthlyIncome : 0.0)
-                + " | Remaining: $" + String.format("%.2f", remainingBudget));
+            + " | Remaining: $" + String.format("%.2f", remainingBudget));
     }
 
     private void updateCharts() {
