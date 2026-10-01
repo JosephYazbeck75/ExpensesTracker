@@ -90,8 +90,6 @@ public class ExpensesTracker extends Application {
     private Alert alert = new Alert(AlertType.WARNING);
     private double totalExpenses = 0;
     private boolean darkMode = false;
-    private Map<String, String> userDatabase = new HashMap<>();
-    private Map<String, List<Expense>> userExpenses = new HashMap<>();
     private Double monthlyIncome = null;
     private VBox legendBox = new VBox();
     private VBox histogramLegendBox = new VBox();
@@ -132,13 +130,6 @@ public class ExpensesTracker extends Application {
 
         Button toSignUpButton = new Button("Sign Up");
 
-        Button logoutButton = new Button("Logout");
-        logoutButton.setStyle("-fx-background-color: #d9534f; -fx-text-fill: white; -fx-font-weight: bold;");
-        logoutButton.setOnAction(e -> showLoginScreen(new Stage()));
-        HBox logoutBox = new HBox(logoutButton);
-        logoutBox.setAlignment(Pos.TOP_LEFT);
-        logoutBox.setPadding(new Insets(10));
-
         Label loginMessage = new Label();
 
         VBox loginBox = new VBox(10, userLabel, userField, passLabel, passField, loginButton, toSignUpButton, loginMessage);
@@ -150,21 +141,19 @@ public class ExpensesTracker extends Application {
         loginButton.setOnAction(e -> {
             String user = userField.getText();
             String pass = passField.getText();
-            if (Database.validateLogin(user, pass)) {
-                currentUser = user;
-                if (!userExpenses.containsKey(user)) {
-                    userExpenses.put(user, new ArrayList<>());
-                }
-                showExpensesScreen(stage, user);
-            } else {
-                loginMessage.setText("Invalid credentials.");
-                loginMessage.setStyle("-fx-text-fill: red;");
+                if (Database.validateLogin(user, pass)) {
+                    currentUser = user;
+                    showExpensesScreen(stage, user);
+                } else {
+                    loginMessage.setText("Invalid credentials.");
+                    loginMessage.setStyle("-fx-text-fill: red;");
             }
         });
 
         toSignUpButton.setOnAction(e -> showSignUpScreen(stage));
 
-        Scene scene = new Scene(loginBox, 300, 280);
+        Scene scene = new Scene(loginBox, 320, 300);
+        scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
         stage.setTitle("Login");
         stage.setScene(scene);
         stage.show();
@@ -202,21 +191,23 @@ public class ExpensesTracker extends Application {
         signUpBox.setPadding(new Insets(20));
         signUpBox.setAlignment(Pos.CENTER);
 
-        signUpButton.setStyle(buttonStyle());
-        signUpButton.setOnAction(e -> {
-            String user = userField.getText();
-            String pass = passField.getText();
-            if (user.isEmpty() || pass.isEmpty()) {
-                signupMessage.setText("Please fill in all fields.");
-            } else if (Database.userExists(user)) {
-                signupMessage.setText("Username already exists.");
+       signUpButton.setOnAction(e -> {
+    String user = userField.getText();
+    String pass = passField.getText();
+    if (user.isEmpty() || pass.isEmpty()) {
+        signupMessage.setText("Please fill in all fields.");
+        } else if (pass.length() < 8) {
+            signupMessage.setText("Password must be at least 8 characters.");
+        } else if (Database.userExists(user)) {
+        signupMessage.setText("Username already exists.");
             } else {
                 Database.registerUser(user, pass);
                 showLoginScreen(stage);
             }
         });
 
-        Scene scene = new Scene(signUpBox, 300, 250);
+        Scene scene = new Scene(signUpBox, 320, 280);
+        scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
         stage.setTitle("Sign Up");
         stage.setScene(scene);
         stage.show();
@@ -229,7 +220,7 @@ public class ExpensesTracker extends Application {
         Label welcomeLabel = new Label("Welcome, " + username + "!");
         welcomeLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
         Button logoutButton = new Button("Logout");
-        logoutButton.setStyle("-fx-background-color: #d9534f; -fx-text-fill: white; -fx-font-weight: bold;");
+        logoutButton.getStyleClass().add("danger-button");
         logoutButton.setOnAction(e -> {
             stage.close();
             showLoginScreen(new Stage());
@@ -246,6 +237,7 @@ public class ExpensesTracker extends Application {
         HBox topBar = new HBox(10, logoutButton, leftSpacer, welcomeLabel, rightSpacer);
         topBar.setPadding(new Insets(10));
         topBar.setAlignment(Pos.CENTER_LEFT);
+        topBar.getStyleClass().add("top-bar");
 
         topBar.setStyle("-fx-background-color: #f0f0f0;");
         if (monthlyIncome == null) {
@@ -300,30 +292,13 @@ public class ExpensesTracker extends Application {
         Button toggleDarkMode = new Button("Toggle Dark Mode");
         toggleDarkMode.setStyle("-fx-background-color: black; -fx-text-fill: white; -fx-font-weight: bold;");
 
-        Button modifyExpense = new Button("Modify Selected");
-        modifyButton.setStyle(buttonStyle());
-        modifyButton.setOnAction(e -> modifySelectedExpense(username));
-
-        List<Button> buttons = List.of(addButton, deleteButton, exportCSV, saveGraph);
-        buttons.forEach(b -> b.setStyle(buttonStyle()));
+        addButton.getStyleClass().add("accent-button");
         modifyButton.setOnAction(e -> modifySelectedExpense(username));
 
         totalLabel = new Label("Total: $0.00");
-        totalLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: green;");
-
+        totalLabel.getStyleClass().add("total-label");
         HBox inputFieldsBox = new HBox(10, descField, amountField, datePicker, categoryBox);
         HBox buttonsBox = new HBox(10, addButton, modifyButton, deleteButton, exportCSV, saveGraph, toggleDarkMode);
-
-        logoutButton = new Button("Logout");
-        logoutButton.setStyle("-fx-background-color: #d9534f; -fx-text-fill: white; -fx-font-weight: bold;");
-        logoutButton.setOnAction(e -> {
-            stage.close();
-            showLoginScreen(new Stage());
-        });
-
-        HBox logoutBox = new HBox(logoutButton);
-        logoutBox.setAlignment(Pos.TOP_LEFT);
-        logoutBox.setPadding(new Insets(10));
 
         VBox inputBox = new VBox(10, inputFieldsBox, buttonsBox);
         inputBox.setPadding(new Insets(10));
@@ -364,10 +339,12 @@ public class ExpensesTracker extends Application {
         refreshTable(username);
         updateCharts();
 
-        currentScene = new Scene(mainLayout, 950, 700);
+        currentScene = new Scene(mainLayout, 1000, 720);
+        currentScene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+        System.out.println("Stylesheet loaded: " + getClass().getResource("style.css"));
         stage.setTitle("Expenses Tracker");
         stage.setScene(currentScene);
-        stage.show();
+        stage.show();   
     }
 
     private void addExpense(String username) {
@@ -381,7 +358,7 @@ public class ExpensesTracker extends Application {
             LocalDate date = datePicker.getValue();
             String category = categoryBox.getValue();
 
-            double currentTotal = userExpenses.get(username).stream().mapToDouble(Expense::getAmount).sum();
+            double currentTotal = totalExpenses;
             if (monthlyIncome != null && (currentTotal + amount) > monthlyIncome) {
                 alert.setTitle("Warning!");
                 alert.setHeaderText("An error has occured!");
@@ -426,10 +403,7 @@ public class ExpensesTracker extends Application {
                 LocalDate date = datePicker.getValue();
                 String category = categoryBox.getValue();
 
-                double currentTotal = userExpenses.get(username).stream()
-                        .filter(e -> e != selected)
-                        .mapToDouble(Expense::getAmount)
-                        .sum();
+                double currentTotal = selected.getAmount();
                  if (monthlyIncome != null && monthlyIncome > 0 && (currentTotal + amount) > monthlyIncome) {
                         showWarning("Modified amount exceeds monthly income!");
                         return;
