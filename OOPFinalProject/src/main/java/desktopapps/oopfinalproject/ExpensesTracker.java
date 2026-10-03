@@ -214,138 +214,145 @@ public class ExpensesTracker extends Application {
     }
 
     private void showExpensesScreen(Stage stage, String username) {
-        monthlyIncome = Database.getMonthlyIncome(username);
-        tableView = new TableView<>();
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label welcomeLabel = new Label("Welcome, " + username + "!");
-        welcomeLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-        Button logoutButton = new Button("Logout");
-        logoutButton.getStyleClass().add("danger-button");
-        logoutButton.setOnAction(e -> {
-            stage.close();
-            showLoginScreen(new Stage());
+    monthlyIncome = Database.getMonthlyIncome(username);
+
+    tableView = new TableView<>();
+    tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+    Label welcomeLabel = new Label("Welcome, " + username + "!");
+    welcomeLabel.getStyleClass().add("welcome-label");
+
+    Button logoutButton = new Button("Logout");
+    logoutButton.getStyleClass().add("danger-button");
+    logoutButton.setOnAction(e -> {
+        stage.close();
+        showLoginScreen(new Stage());
+    });
+
+    Button toggleDarkMode = new Button("Toggle Dark Mode");
+    toggleDarkMode.getStyleClass().add("dark-mode-toggle");
+
+    if (monthlyIncome == null) {
+        TextInputDialog incomeDialog = new TextInputDialog();
+        incomeDialog.setHeaderText("Enter Monthly Income");
+        incomeDialog.setContentText("Monthly Income:");
+        incomeDialog.showAndWait().ifPresent(input -> {
+            try {
+                monthlyIncome = Double.parseDouble(input);
+            } catch (NumberFormatException e) {
+                monthlyIncome = 0.0;
+            }
+            Database.setMonthlyIncome(username, monthlyIncome);
         });
-
-        welcomeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #333;");
-        welcomeLabel.setAlignment(Pos.CENTER);
-
-        Region leftSpacer = new Region();
-        Region rightSpacer = new Region();
-        HBox.setHgrow(leftSpacer, Priority.ALWAYS);
-        HBox.setHgrow(rightSpacer, Priority.ALWAYS);
-
-        HBox topBar = new HBox(10, logoutButton, leftSpacer, welcomeLabel, rightSpacer);
-        topBar.setPadding(new Insets(10));
-        topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.getStyleClass().add("top-bar");
-
-        topBar.setStyle("-fx-background-color: #f0f0f0;");
-        if (monthlyIncome == null) {
-            TextInputDialog incomeDialog = new TextInputDialog();
-            incomeDialog.setHeaderText("Enter Monthly Income");
-            incomeDialog.setContentText("Monthly Income:");
-            incomeDialog.showAndWait().ifPresent(input -> {
-                try {
-                    monthlyIncome = Double.parseDouble(input);
-                } catch (NumberFormatException e) {
-                    monthlyIncome = 0.0;
-                }
-                Database.setMonthlyIncome(username, monthlyIncome);
-            });
-        }
-
-        tableView = new TableView<>();
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        TableColumn<Expense, String> descCol = new TableColumn<>("Description");
-        descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
-        TableColumn<Expense, Double> amountCol = new TableColumn<>("Amount");
-        amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
-        TableColumn<Expense, LocalDate> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
-        TableColumn<Expense, String> categoryCol = new TableColumn<>("Category");
-        categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
-        tableView.getColumns().addAll(descCol, amountCol, dateCol, categoryCol);
-
-        descField = new TextField();
-        descField.setPromptText("Description");
-        descField.setPrefWidth(150);
-
-        amountField = new TextField();
-        amountField.setPromptText("Amount");
-
-        datePicker = new DatePicker(LocalDate.now());
-        categoryBox = new ComboBox<>();
-        categoryBox.getItems().addAll("Food", "Transport", "Entertainment", "Utilities", "Other");
-        categoryBox.setValue("Other");
-
-        Button addButton = new Button("Add Expense");
-
-        Button deleteButton = new Button("Delete Selected");
-
-        Button modifyButton = new Button("Modify Selected");
-        modifyButton.setStyle(buttonStyle());
-
-        Button exportCSV = new Button("Export CSV");
-
-        Button saveGraph = new Button("Save Charts");
-
-        Button toggleDarkMode = new Button("Toggle Dark Mode");
-        toggleDarkMode.setStyle("-fx-background-color: black; -fx-text-fill: white; -fx-font-weight: bold;");
-
-        addButton.getStyleClass().add("accent-button");
-        modifyButton.setOnAction(e -> modifySelectedExpense(username));
-
-        totalLabel = new Label("Total: $0.00");
-        totalLabel.getStyleClass().add("total-label");
-        HBox inputFieldsBox = new HBox(10, descField, amountField, datePicker, categoryBox);
-        HBox buttonsBox = new HBox(10, addButton, modifyButton, deleteButton, exportCSV, saveGraph, toggleDarkMode);
-
-        VBox inputBox = new VBox(10, inputFieldsBox, buttonsBox);
-        inputBox.setPadding(new Insets(10));
-        inputBox.setAlignment(Pos.CENTER);
-        inputBox.setPadding(new Insets(10));
-        inputBox.setAlignment(Pos.CENTER);
-
-        pieChart = new PieChart();
-        pieChart.setLegendVisible(false);
-        histogram = new BarChart<>(new CategoryAxis(), new NumberAxis());
-        histogram.setTitle("Expenses by Category");
-
-        messageLabel = new Label();
-        messageLabel.setStyle("-fx-text-fill: red;");
-
-        VBox pieChartBox = new VBox(5, pieChart, legendBox);
-        pieChartBox.setAlignment(Pos.CENTER);
-
-        VBox histogramBox = new VBox(5, histogram, histogramLegendBox);
-        histogramBox.setAlignment(Pos.CENTER);
-
-        chartBox = new HBox(20, pieChartBox, histogramBox);
-        chartBox.setPadding(new Insets(10));
-        chartBox.setAlignment(Pos.CENTER);
-
-        VBox mainLayout = new VBox(10, topBar, inputBox, tableView, totalLabel, chartBox, messageLabel);
-        mainLayout.setPadding(new Insets(10));
-
-        addButton.setOnAction(e -> addExpense(username));
-        deleteButton.setOnAction(e -> deleteSelectedExpense(username));
-        exportCSV.setOnAction(e -> exportToCSV());
-        saveGraph.setOnAction(e -> saveChartsAsImage());
-        toggleDarkMode.setOnAction(e -> {
-            darkModeEnabled = !darkModeEnabled;
-            applyTheme(currentScene, darkModeEnabled);
-        });
-
-        refreshTable(username);
-        updateCharts();
-
-        currentScene = new Scene(mainLayout, 1000, 720);
-        currentScene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-        System.out.println("Stylesheet loaded: " + getClass().getResource("style.css"));
-        stage.setTitle("Expenses Tracker");
-        stage.setScene(currentScene);
-        stage.show();   
     }
+
+    TableColumn<Expense, String> descCol = new TableColumn<>("Description");
+    descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
+    TableColumn<Expense, Double> amountCol = new TableColumn<>("Amount");
+    amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
+    TableColumn<Expense, LocalDate> dateCol = new TableColumn<>("Date");
+    dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
+    TableColumn<Expense, String> categoryCol = new TableColumn<>("Category");
+    categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
+    tableView.getColumns().addAll(descCol, amountCol, dateCol, categoryCol);
+
+    descField = new TextField();
+    descField.setPromptText("Description");
+    descField.setPrefWidth(150);
+
+    amountField = new TextField();
+    amountField.setPromptText("Amount");
+
+    datePicker = new DatePicker(LocalDate.now());
+    categoryBox = new ComboBox<>();
+    categoryBox.getItems().addAll("Food", "Transport", "Entertainment", "Utilities", "Other");
+    categoryBox.setValue("Other");
+
+    Button addButton = new Button("Add Expense");
+    addButton.getStyleClass().add("accent-button");
+
+    Button deleteButton = new Button("Delete Selected");
+
+    Button modifyButton = new Button("Modify Selected");
+    modifyButton.setOnAction(e -> modifySelectedExpense(username));
+
+    Button exportCSV = new Button("Export CSV");
+    Button saveGraph = new Button("Save Charts");
+
+    totalLabel = new Label("Total: $0.00");
+    totalLabel.getStyleClass().add("total-label");
+
+    HBox inputFieldsBox = new HBox(10, descField, amountField, datePicker, categoryBox);
+    HBox buttonsBox = new HBox(10, addButton, modifyButton, deleteButton, exportCSV, saveGraph);
+
+    VBox inputBox = new VBox(10, inputFieldsBox, buttonsBox);
+    inputBox.setPadding(new Insets(10));
+    inputBox.setAlignment(Pos.CENTER);
+    inputBox.getStyleClass().add("card");
+
+    pieChart = new PieChart();
+    pieChart.setLegendVisible(false);
+    histogram = new BarChart<>(new CategoryAxis(), new NumberAxis());
+    histogram.setTitle("Expenses by Category");
+
+    messageLabel = new Label();
+    messageLabel.getStyleClass().add("error-text");
+
+    VBox pieChartBox = new VBox(5, pieChart, legendBox);
+    pieChartBox.setAlignment(Pos.CENTER);
+
+    VBox histogramBox = new VBox(5, histogram, histogramLegendBox);
+    histogramBox.setAlignment(Pos.CENTER);
+
+    chartBox = new HBox(20, pieChartBox, histogramBox);
+    chartBox.setPadding(new Insets(10));
+    chartBox.setAlignment(Pos.CENTER);
+    chartBox.getStyleClass().add("card");
+
+    addButton.setOnAction(e -> addExpense(username));
+    deleteButton.setOnAction(e -> deleteSelectedExpense(username));
+    exportCSV.setOnAction(e -> exportToCSV());
+    saveGraph.setOnAction(e -> saveChartsAsImage());
+    toggleDarkMode.setOnAction(e -> {
+        darkModeEnabled = !darkModeEnabled;
+        applyTheme(currentScene, darkModeEnabled);
+    });
+
+    Label appTitle = new Label("Expense Tracker");
+    appTitle.getStyleClass().add("app-title");
+
+    toggleDarkMode.setMaxWidth(Double.MAX_VALUE);
+    logoutButton.setMaxWidth(Double.MAX_VALUE);
+
+    Region sidebarSpacer = new Region();
+    VBox.setVgrow(sidebarSpacer, Priority.ALWAYS);
+
+    VBox sidebar = new VBox(12, appTitle, welcomeLabel, sidebarSpacer, toggleDarkMode, logoutButton);
+    sidebar.getStyleClass().add("sidebar");
+
+    HBox budgetCard = new HBox(totalLabel);
+    budgetCard.getStyleClass().add("budget-card");
+    budgetCard.setAlignment(Pos.CENTER_LEFT);
+
+    VBox tableCard = new VBox(tableView);
+    tableCard.getStyleClass().add("card");
+
+    VBox content = new VBox(16, budgetCard, inputBox, tableCard, chartBox, messageLabel);
+    content.getStyleClass().add("content-area");
+
+    BorderPane mainLayout = new BorderPane();
+    mainLayout.setLeft(sidebar);
+    mainLayout.setCenter(content);
+
+    refreshTable(username);
+    updateCharts();
+
+    currentScene = new Scene(mainLayout, 1000, 720);
+    currentScene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+    stage.setTitle("Expenses Tracker");
+    stage.setScene(currentScene);
+    stage.show();
+}
 
     private void addExpense(String username) {
         try {
@@ -584,20 +591,11 @@ public class ExpensesTracker extends Application {
     }
     private void applyTheme(Scene scene, boolean dark) {
         if (dark) {
-            scene.getRoot().setStyle("-fx-base: #2b2b2b; -fx-background-color: #2b2b2b; -fx-text-fill: white;");
-            applyTextFill(scene.getRoot(), "white");
-        } else {
-            scene.getRoot().setStyle("");
-            applyTextFill(scene.getRoot(), "black");
-        }
-    }
-    private void applyTextFill(Parent root, String color) {
-        for (Node node : root.lookupAll("*")) {
-            if (node instanceof Labeled) {
-                ((Labeled) node).setTextFill(Color.web(color));
-            } else if (node instanceof Text) {
-                ((Text) node).setFill(Color.web(color));
+            if (!scene.getRoot().getStyleClass().contains("dark-mode")) {
+                scene.getRoot().getStyleClass().add("dark-mode");
             }
+        } else {
+            scene.getRoot().getStyleClass().remove("dark-mode");
         }
     }
 

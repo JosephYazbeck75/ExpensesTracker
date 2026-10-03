@@ -121,3 +121,102 @@
     -fx-background-color: #1F1F1F;
     -fx-border-color: #333333;
 }
+.welcome-label {
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1C1C1C;
+}
+.error-text {
+    -fx-text-fill: #B3514A;
+    -fx-font-size: 12px;
+}
+.dark-mode-toggle {
+    -fx-background-color: transparent;
+    -fx-border-color: #1C1C1C;
+    -fx-border-width: 1px;
+    -fx-text-fill: #1C1C1C;
+}
+.dark-mode .dark-mode-toggle {
+    -fx-border-color: #EDEDED;
+    -fx-text-fill: #EDEDED;
+}
+
+.sidebar {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E5E3DD;
+    -fx-border-width: 0 1px 0 0;
+    -fx-padding: 24px 16px;
+    -fx-pref-width: 200px;
+    -fx-min-width: 200px;
+}
+.dark-mode .sidebar {
+    -fx-background-color: #1F1F1F;
+    -fx-border-color: #333333;
+}
+.sidebar .button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1C1C1C;
+    -fx-alignment: CENTER_LEFT;
+    -fx-pref-width: 170px;
+    -fx-background-radius: 4px;
+}
+.sidebar .button:hover {
+    -fx-background-color: #F0EFEA;
+}
+.dark-mode .sidebar .button {
+    -fx-text-fill: #EDEDED;
+}
+.dark-mode .sidebar .button:hover {
+    -fx-background-color: #2A2A2A;
+}
+.card {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E5E3DD;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 20px;
+}
+.dark-mode .card {
+    -fx-background-color: #1F1F1F;
+    -fx-border-color: #333333;
+}
+.content-area {
+    -fx-background-color: #FAFAF8;
+    -fx-padding: 24px;
+}
+.dark-mode .content-area {
+    -fx-background-color: #161616;
+}
+.dark-mode .table-row-cell {
+    -fx-background-color: #1F1F1F;
+    -fx-text-fill: #EDEDED;
+}
+.dark-mode .table-row-cell .table-cell {
+    -fx-text-fill: #EDEDED;
+}
+.table-row-cell .table-cell {
+    -fx-text-fill: #1C1C1C;
+}
+.dark-mode .table-view .column-header-background {
+    -fx-background-color: #161616;
+}
+.dark-mode .table-view .column-header-background .label {
+    -fx-text-fill: #EDEDED !important;
+}
+.dark-mode .table-view .column-header .label,
+.dark-mode .table-view .filler {
+    -fx-text-fill: #161616 !important;
+}
+.budget-card {
+    -fx-background-color: #1C1C1C;
+    -fx-background-radius: 8px;
+    -fx-padding: 20px 24px;
+}
+.budget-card .label {
+    -fx-text-fill: #FAFAF8;
+}
+.budget-card .total-label {
+    -fx-text-fill: #D4C4A8;
+    -fx-font-size: 20px;
+}
